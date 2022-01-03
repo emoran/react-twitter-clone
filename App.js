@@ -80,9 +80,6 @@ export default function App() {
       }}>
         <Drawer.Screen name="Home" component={HonmeStackNavigator}/>
         <Drawer.Screen name="Settings" component={SettingsScreen}/>
-        {/* <Drawer.Screen name="New Tweet" component={NewTweet}/>
-        <Drawer.Screen name="Tweet Screen" component={TweetScreen}/>
-        <Drawer.Screen name="Profile Screen" component={ProfileScreen}/> */}
       </Drawer.Navigator>
     </NavigationContainer>
   ); 
