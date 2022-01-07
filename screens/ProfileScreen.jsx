@@ -41,8 +41,11 @@ export default function ProfileScreen(){
             </View>
 
             <View style={styles.locationContainer}>
-             
-             </View>
+                <TouchableOpacity style={styles.linkItem} onPress={()=> Linking.openURL('httpsL//yucelmoran.com')}>
+                   <EvilIcons name="calendar" size={24} color="gray"/>
+                   <Text style={styles.textColor}>Join on March 2020</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 
