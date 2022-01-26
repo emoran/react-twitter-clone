@@ -1,25 +1,35 @@
 import { NavigationContainer } from '@react-navigation/native';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {View,Text,Button,StyleSheet, FlatList, Image,TouchableOpacity, Platform} from 'react-native';
 import { EvilIcons } from '@expo/vector-icons'; 
 import { AntDesign } from '@expo/vector-icons'; 
+import locale from 'date-fns/locale/en-US';
+
+import axios from 'axios';
+import { formatDistanceToNowStrict } from 'date-fns';
+import formatDistance from '../helpers/formatDistanceCustom';
+  
+
 
 export default function HomeScreen({navigation}){
 
-    const DATA = [
-        {
-          id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28ba',
-          title: 'First Item',
-        },
-        {
-          id: '3ac68afc-c605-48d3-a4f8-fbd91aa97f63',
-          title: 'Second Item',
-        },
-        {
-          id: '58694a0f-3da1-471f-bd96-145571e29d72',
-          title: 'Third Item',
-        },
-      ];
+    const [data,setData] = useState ([]);
+
+    useEffect(()=>{
+        getAllTweets();
+    },[])
+
+    function getAllTweets(){
+        axios.get('http://66.94.99.216:81/api/tweets').
+        then(response => {
+            console.log(response.data);
+            setData(response.data);
+        })
+        .catch(error =>{
+            console.log(error)
+        })
+    }
+
     
     function gotoProfile(param){
         navigation.navigate('Profile Screen') 
@@ -33,25 +43,29 @@ export default function HomeScreen({navigation}){
         navigation.navigate('New Tweet') 
     }
 
-    const renderItem = ({item}) => (
+    const renderItem = ({item: tweet}) => (
         <View style={styles.tweetContainer}>
             <TouchableOpacity onPress={()=> gotoProfile()}>
                 <Image style={styles.avatar} source={{
-                    uri:"https://avatars.githubusercontent.com/u/1028534?v=4"
+                    uri:tweet.user.avatar
                 }}/>
             </TouchableOpacity>
             <View style={{flex:1}}>
                 <TouchableOpacity style={styles.flexRow}>
-                   <Text style={styles.tweetName} numberOfLines={1}>{item.title}</Text>
-                   <Text style={styles.tweetHandle}>@yucelmoran</Text>
+                   <Text style={styles.tweetName} numberOfLines={1}>{tweet.user.name}</Text>
+                   <Text style={styles.tweetHandle}>@{tweet.user.username}</Text>
                    <Text style={styles.tweetName} >mi dot</Text>
-                   <Text>9 am</Text>
+                   <Text>
+                       {/* {formatDistanceToNowStrict(new Date(tweet.created_at))} */}
+                       {formatDistanceToNowStrict(new Date(tweet.created_at),{
+                           locale:{
+                               formatDistance,
+                           }
+                       })}
+                    </Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.tweetContainer} onPress={() => gotoSingleTweet()}>
-                    <Text style={styles.tweetContent}>Lorem Ipsum is simply dummy text of the printing and typesetting industry. 
-                    Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, 
-                    when an unknown printer took a galley of type and scrambled it to make a type specimen book.                    
-                </Text>
+                    <Text style={styles.tweetContent}>{tweet.body}</Text>
                 </TouchableOpacity>
 
                 <View style={styles.tweetEngagement}>
@@ -81,12 +95,14 @@ export default function HomeScreen({navigation}){
 
     return (
         <View style={styles.container}>
-           <FlatList
-                data={DATA}
+           
+            <FlatList
+                data={data}
                 renderItem={renderItem}
                 keyExtractor={item => item.id}
                 ItemSeparatorComponent={() => <View style={styles.tweetSeparator}></View>}
             />
+            
             
             <TouchableOpacity 
                 style={styles.floatingButton}
