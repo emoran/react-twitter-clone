@@ -1,6 +1,6 @@
 import { NavigationContainer } from '@react-navigation/native';
 import React, {useEffect, useState} from 'react';
-import {View,Text,Button,StyleSheet, FlatList, Image,TouchableOpacity, Platform} from 'react-native';
+import {View,Text,Button,StyleSheet, FlatList, Image,TouchableOpacity, Platform, ActivityIndicator} from 'react-native';
 import { EvilIcons } from '@expo/vector-icons'; 
 import { AntDesign } from '@expo/vector-icons'; 
 import locale from 'date-fns/locale/en-US';
@@ -14,6 +14,8 @@ import formatDistance from '../helpers/formatDistanceCustom';
 export default function HomeScreen({navigation}){
 
     const [data,setData] = useState ([]);
+    const [isLoading,setIsLoading] = useState (true);
+    const [isRefreshing,setIsRefreshing] = useState (false);
 
     useEffect(()=>{
         getAllTweets();
@@ -24,12 +26,20 @@ export default function HomeScreen({navigation}){
         then(response => {
             console.log(response.data);
             setData(response.data);
+            setIsLoading(false);
+            setIsRefreshing(false);
         })
         .catch(error =>{
-            console.log(error)
+            console.log(error);
+            setIsLoading(false);
+            setIsRefreshing(false);
         })
     }
 
+    function handleRefresh(){
+        setIsRefreshing(true);
+        getAllTweets();
+    }
     
     function gotoProfile(param){
         navigation.navigate('Profile Screen') 
@@ -95,13 +105,16 @@ export default function HomeScreen({navigation}){
 
     return (
         <View style={styles.container}>
-           
-            <FlatList
+            { isLoading ? (<ActivityIndicator style={{ marginTop:8 }} size="large" color="gray" />) : ( <FlatList
                 data={data}
                 renderItem={renderItem}
-                keyExtractor={item => item.id}
+                keyExtractor={item => item.id.toString()}
                 ItemSeparatorComponent={() => <View style={styles.tweetSeparator}></View>}
-            />
+                refreshing={isRefreshing}
+                onRefresh={handleRefresh}
+            />)}
+            
+           
             
             
             <TouchableOpacity 
