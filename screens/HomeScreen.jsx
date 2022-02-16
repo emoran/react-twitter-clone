@@ -16,19 +16,33 @@ export default function HomeScreen({navigation}){
     const [data,setData] = useState ([]);
     const [isLoading,setIsLoading] = useState (true);
     const [isRefreshing,setIsRefreshing] = useState (false);
+    const [page,setPage] = useState (1);
+    const [isAtendOfScrolling,setIsAtendOfScrolling] = useState (false);
 
     useEffect(()=>{
         getAllTweets();
-    },[])
+    },[page])
 
     function getAllTweets(){
-        axios.get('http://66.94.99.216:81/api/tweets').
+        axios.get('http://66.94.99.216:81/api/tweets?page='+page).
         then(response => {
-            console.log(response.data);
-            setData(response.data);
+            
+
+            if(page === 1){
+                setData(response.data.data);
+            }
+            else {
+                setData([...data, ...response.data.data]);
+            }
+            
+
+            if(!response.data.next_page_url){
+                setIsAtendOfScrolling(true);
+            }
+
             setIsLoading(false);
             setIsRefreshing(false);
-        })
+        }) 
         .catch(error =>{
             console.log(error);
             setIsLoading(false);
@@ -37,8 +51,14 @@ export default function HomeScreen({navigation}){
     }
 
     function handleRefresh(){
+        setPage(1);
+        setIsAtendOfScrolling(false);
         setIsRefreshing(true);
         getAllTweets();
+    }
+
+    function handleEnd(){
+        setPage( page + 1 );
     }
     
     function gotoProfile(param){
@@ -112,6 +132,9 @@ export default function HomeScreen({navigation}){
                 ItemSeparatorComponent={() => <View style={styles.tweetSeparator}></View>}
                 refreshing={isRefreshing}
                 onRefresh={handleRefresh}
+                onEndReached={handleEnd}
+                onEndReachedThreshold={0}
+                ListFooterComponent={() => !isAtendOfScrolling && (<ActivityIndicator size="large" color="gray"></ActivityIndicator>)}
             />)}
             
            
