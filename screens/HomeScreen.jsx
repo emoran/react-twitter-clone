@@ -8,7 +8,7 @@ import locale from 'date-fns/locale/en-US';
 import axios from 'axios';
 import { formatDistanceToNowStrict } from 'date-fns';
 import formatDistance from '../helpers/formatDistanceCustom';
-  
+import axiosConfig from '../helpers/axiosConfig';
 
 
 export default function HomeScreen({navigation}){
@@ -24,7 +24,7 @@ export default function HomeScreen({navigation}){
     },[page])
 
     function getAllTweets(){
-        axios.get('http://66.94.99.216:81/api/tweets?page='+page).
+        axiosConfig.get('/tweets?page='+page).
         then(response => {
             
 
@@ -65,8 +65,10 @@ export default function HomeScreen({navigation}){
         navigation.navigate('Profile Screen') 
     }
 
-    function gotoSingleTweet(param){
-        navigation.navigate('Tweet Screen') 
+    function gotoSingleTweet(tweetId){
+        navigation.navigate('Tweet Screen',{
+            tweetId:tweetId,
+        });
     }
 
     function gotoNewTweet(param){
@@ -94,7 +96,7 @@ export default function HomeScreen({navigation}){
                        })}
                     </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.tweetContainer} onPress={() => gotoSingleTweet()}>
+                <TouchableOpacity style={styles.tweetContainer} onPress={() => gotoSingleTweet(tweet.id)}>
                     <Text style={styles.tweetContent}>{tweet.body}</Text>
                 </TouchableOpacity>
 

@@ -1,22 +1,51 @@
-import React from 'react';
-import {View,Text,StyleSheet,TouchableOpacity,Image} from 'react-native';
+import React, {useEffect,useState} from 'react';
+import {View,Text,StyleSheet,TouchableOpacity,Image,ActivityIndicator} from 'react-native';
 import { Entypo } from '@expo/vector-icons'; 
 import { EvilIcons } from '@expo/vector-icons'; 
 
-export default function TweetScreen(){
+import axios from 'axios';
+import { format } from 'date-fns/esm';
+import axiosConfig from '../helpers/axiosConfig';
+
+export default function TweetScreen({route,navigation}){
+
+
+    const [tweet,setTweet] = useState ([null]);
+    const [isLoading,setIsLoading] = useState (true);
+
+    useEffect(()=>{
+        getTweet();
+    },[]);
+
+    function getTweet(){
+        axiosConfig.get('/tweets/'+route.params.tweetId).
+        then(response => {
+            setTweet(response.data);
+            setIsLoading(false);
+        }) 
+        .catch(error =>{
+            console.log(error);
+            setIsLoading(false);  
+        })
+    }
+     
     return (
         <View style={styles.container}>
+            {isLoading ? (
+                <ActivityIndicator style={{ marginTop:8 }} size="large" color="gray" />
+            ) : (
+                <>
             <View style={styles.profileContainer}>              
                 <TouchableOpacity style={styles.flexRow}>
                     <Image 
                     style={styles.avatar} 
                     source={{
-                        uri:"https://avatars.githubusercontent.com/u/1028534?v=4"
+                        uri:tweet.user.avatar 
                     }}/>
 
                     <View>
-                        <Text style={styles.tweetName}>Edgar Moran</Text>
-                        <Text style={styles.tweetHandle}>@yucelmoran</Text>
+                        <Text style={styles.tweetName}>{tweet.user.name}</Text>
+                        <Text style={styles.tweetHandle}>@{tweet.user.username}</Text>
                     </View>
                 </TouchableOpacity>
 
@@ -26,12 +55,14 @@ export default function TweetScreen(){
             </View>    
 
             <View style={styles.tweetContentContainer}>
-                <Text style={styles.tweetContent}>
-                Lorem Ipsum is simply dummy text of the printing and typesetting industry. 
-                Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, 
-                when an unknown printer took a galley of type and scrambled it to make a type specimen book. 
-                It has survived not only five centuries, 
-                </Text>
+                <Text style={styles.tweetContent}>{tweet.body}</Text>
+                <View style={styles.tweetTimestampContainer}>
+                    <Text style={styles.tweetTimestampText}>{format(new Date(tweet.created_at),'h:mm a')}</Text>
+                    <Text style={styles.tweetTimestampText}>&middot;</Text>
+                    <Text style={styles.tweetTimestampText}>{format(new Date(tweet.created_at),'d MMM.yy')}</Text>
+                    <Text style={styles.tweetTimestampText}>&middot;</Text>
+                    <Text style={[styles.tweetTimestampText, styles.linkColor]}>Twitter for Iphone</Text>
+                </View>
             </View>     
 
             <View style={styles.tweetEngagement}>
@@ -71,6 +102,8 @@ export default function TweetScreen(){
                 </TouchableOpacity> 
 
             </View>
+            </>
+            )}
         </View>
 
 
@@ -133,6 +166,17 @@ const styles = StyleSheet.create({
     tweetEngagementLabel:{
         color:'gray',
         marginLeft: 6
+    },
+    tweetTimestampContainer:{
+        flexDirection:'row',
+        marginTop:12,
+    },
+    tweetTimestampText:{
+        color:'gray',
+        marginRight:6,
+    },
+    linkColor:{
+        color:'#1d9bf1'
     },
     ml4:{
         marginLeft:14
