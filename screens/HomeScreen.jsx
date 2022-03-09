@@ -1,27 +1,54 @@
 import { NavigationContainer } from '@react-navigation/native';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {View,Text,Button,StyleSheet, FlatList, Image,TouchableOpacity, Platform, ActivityIndicator} from 'react-native';
 import { EvilIcons } from '@expo/vector-icons'; 
 import { AntDesign } from '@expo/vector-icons'; 
 import locale from 'date-fns/locale/en-US';
 
-import axios from 'axios';
 import { formatDistanceToNowStrict } from 'date-fns';
 import formatDistance from '../helpers/formatDistanceCustom';
 import axiosConfig from '../helpers/axiosConfig';
 
 
-export default function HomeScreen({navigation}){
+export default function HomeScreen({route,navigation}){
 
     const [data,setData] = useState ([]);
     const [isLoading,setIsLoading] = useState (true);
     const [isRefreshing,setIsRefreshing] = useState (false);
     const [page,setPage] = useState (1);
     const [isAtendOfScrolling,setIsAtendOfScrolling] = useState (false);
+    const flatListRef = useRef();
 
     useEffect(()=>{
         getAllTweets();
-    },[page])
+    },[page]);
+
+    useEffect(()=>{
+        if(route.params?.newTweetAdded){
+            getAllTweetsRefresh();
+            flatListRef.current.scrollToOffset({
+                offset:0,
+            })
+        }
+       
+    },[route.params?.newTweetAdded]);
+
+    function getAllTweetsRefresh(){
+        setPage(1);
+        setIsAtendOfScrolling(false);
+        setIsRefreshing(false);
+
+        axiosConfig.get('/tweets').
+        then(response => {
+            setData(response.data.data);
+            setIsLoading(false);
+            setIsRefreshing(false);
+        }) 
+        .catch(error =>{
+            setIsLoading(false);
+            setIsRefreshing(false);
+        })
+    }
 
     function getAllTweets(){
         axiosConfig.get('/tweets?page='+page).
@@ -127,7 +154,10 @@ export default function HomeScreen({navigation}){
 
     return (
         <View style={styles.container}>
-            { isLoading ? (<ActivityIndicator style={{ marginTop:8 }} size="large" color="gray" />) : ( <FlatList
+            { isLoading ? (<ActivityIndicator style={{ marginTop:8 }} size="large" color="gray" />) : ( 
+            
+            <FlatList
+                ref={flatListRef}
                 data={data}
                 renderItem={renderItem}
                 keyExtractor={item => item.id.toString()}

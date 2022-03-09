@@ -1,13 +1,34 @@
 import { NavigationContainer } from '@react-navigation/native';
 import React, { useState } from 'react';
-import {View,Text,StyleSheet,Image} from 'react-native';
+import {View,Text,StyleSheet,Image,ActivityIndicator,Alert} from 'react-native';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
+
+import axiosConfig from '../helpers/axiosConfig';
 
 export default function NewTweet({navigation}){
     const [tweet,setTweet] = useState('');
+    const [isLoading,setIsLoading] = useState (false);
 
     function sendTweet(){
-        navigation.navigate('Tab');
+
+        if(tweet.length === 0){
+            Alert.alert('Please enter a tweet');
+            return;
+        }
+        setIsLoading(true);
+        axiosConfig
+            .post('/tweets',{
+                body:tweet
+            }).
+            then(response => {
+                navigation.navigate('Home1',{
+                   newTweetAdded:response.data,
+                });
+            }) 
+            .catch(error =>{
+                console.log(error);
+                setIsLoading(false);  
+            })
     }
 
     return (
@@ -16,9 +37,24 @@ export default function NewTweet({navigation}){
 
                 <Text style={tweet.length > 250 ? styles.textRed : styles.textGray}> Character left {280 - tweet.length}</Text>
 
-                <TouchableOpacity style={styles.tweetButton} onPress={() => sendTweet()} >
-                    <Text style={styles.tweetButtonText}>Tweet</Text>
-                </TouchableOpacity>
+                <View style={{flexDirection:'row',alignItems:'center'}}>
+
+                    {isLoading && (
+                    <ActivityIndicator 
+                    size="small" 
+                    color="gray" 
+                    style={{marginRight:8}}/>
+                    )}
+
+                    <TouchableOpacity 
+                        style={styles.tweetButton} 
+                        onPress={() => sendTweet()}
+                        disabled={isLoading}
+                    >
+                        <Text style={styles.tweetButtonText}>Tweet</Text>
+                    </TouchableOpacity>
+                </View>
+                
             </View>
 
             <View style={styles.tweetBoxContainer}>
